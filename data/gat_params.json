@@ -1,0 +1,1 @@
+{"nfeat_gat": 768, "nhid_gat": 96, "nclass_gat": 7, "dropout_gat": 0.1, "alpha_gat": 0.2, "nheads_gat": 8, "adj_save_path":"data/pickled_adjs", "theta":60}
