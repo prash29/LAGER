@@ -154,15 +154,37 @@ Functions for finding min. distance between two bounding boxes and some helper f
 
 
 def get_corner_coords(bbox):
+    """
+    Get the corner coordinates of a bounding box.
+    Parameters:
+        bbox (list): Bounding box coordinates [x0, y0, x1, y1].
+    Returns:
+        list: List of tuples containing the corner coordinates of the bounding box.
+    """
     return [(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[3]), (bbox[0], bbox[3])]
 
 def get_segments(coords):
+    """
+    Get the segments from a list of coordinates.
+    Parameters:
+        coords (list): List of coordinates.
+    Returns:
+        list: List of segments defined by pairs of coordinates.
+    """
     return [[coords[0], coords[1]], [coords[1], coords[2]], [coords[2], coords[3]], [coords[3], coords[1]]]
 
 def find_min_distance(coords_a, coords_b):
-    ''' Returns the minimum distance between bounding box A to bounding box B along with the point (from BB of A)
-    and the corner/point (from BB of B)
-    '''
+    """
+    Find the minimum distance between bounding box A to bounding box B along with the point (from BB of A)
+    and the corner/point (from BB of B).
+
+    Parameters:
+        coords_a (list): List of corner coordinates of bounding box A.
+        coords_b (list): List of corner coordinates of bounding box B.
+
+    Returns:
+        tuple: A tuple containing the minimum distance, the point from BB of A, and the corner/point from BB of B.
+    """
     segments_b = get_segments(coords_b)
     distances = []
     for pt in coords_a:
@@ -176,7 +198,19 @@ def find_min_distance(coords_a, coords_b):
     return distances[0]
 
 def unnormalize_box(bbox, width, height):
-     return [
+    """
+    Convert bounding box coordinates from normalized values (0-1000 range) to absolute coordinates based on image dimensions.
+
+    Parameters:
+        bbox (list): The normalized bounding box coordinates [x0, y0, x1, y1].
+        width (int): The width of the image in pixels.
+        height (int): The height of the image in pixels.
+
+    Returns:
+        list: The unnormalized bounding box coordinates [x0', y0', x1', y1'].
+              Coordinates are in absolute pixel values.
+    """
+    return [
          width * (bbox[0] / 1000),
          height * (bbox[1] / 1000),
          width * (bbox[2] / 1000),
@@ -184,6 +218,18 @@ def unnormalize_box(bbox, width, height):
      ]
      
 def normalize_box(bbox, width, height):
+    """
+    Convert bounding box coordinates from absolute coordinates to normalized coordinates (0-1000 range) based on image dimensions.
+
+    Parameters:
+        bbox (list): The absolute bounding box coordinates [x0', y0', x1', y1'].
+        width (int): The width of the image in pixels.
+        height (int): The height of the image in pixels.
+
+    Returns:
+        list: The normalized bounding box coordinates [x0, y0, x1, y1].
+              Coordinates are in the range of 0 to 1000.
+    """
     return [ int((1000*bbox[0])/width),
              int((1000*bbox[1])/height),
              int((1000*bbox[2])/width),
@@ -216,13 +262,33 @@ def get_rotated_point(coord, center, angle):
         y = 1023
     return (x,y)
 
-def get_bbox_from_coords(coords):
-    return [coords[0][0], coords[1][1], coords[2][0], coords[3][1]]
+# def get_bbox_from_coords(coords):
+#     return [coords[0][0], coords[1][1], coords[2][0], coords[3][1]]
 
 def get_bbox_from_rotated_coords(rotated_coords):
+    """
+    Get the bounding box coordinates from a list of rotated corner coordinates.
+
+    Parameters:
+        rotated_coords (list): List of rotated corner coordinates [(x0, y0), (x1, y1), (x2, y2), (x3, y3)].
+
+    Returns:
+        list: Bounding box coordinates [x3, y0, x2, y2].
+    """
     return [rotated_coords[3][0], rotated_coords[0][1], rotated_coords[2][0], rotated_coords[2][1]]
 
 def get_rotated_bboxes(bboxes, width_height_list = [], angle = 3):
+    """
+    Get rotated bounding boxes based on the specified angle.
+
+    Parameters:
+        bboxes (list): List of bounding boxes, each represented as a list of coordinates [x0, y0, x1, y1].
+        width_height_list (list): List of tuples containing width and height of each image corresponding to the bounding boxes.
+        angle (int): The angle of rotation in degrees.
+
+    Returns:
+        list: List of rotated bounding boxes, each represented as a list of coordinates [x0_rot, y0_rot, x1_rot, y1_rot].
+    """
     bboxes_rotated = []
     for bbox, width_height in zip(bboxes, width_height_list):
         bbox_rotated = []
@@ -241,6 +307,17 @@ def get_rotated_bboxes(bboxes, width_height_list = [], angle = 3):
     return bboxes_rotated
 
 def get_scaled_bboxes(bboxes, scale_factor = 2, width_height_list = []):
+    """
+    Get scaled bounding boxes based on the specified scale factor.
+
+    Parameters:
+        bboxes (list): List of bounding boxes, each represented as a list of coordinates [x0, y0, x1, y1].
+        scale_factor (int): The factor by which to scale the bounding boxes.
+        width_height_list (list): List of tuples containing width and height of each image corresponding to the bounding boxes.
+
+    Returns:
+        list: List of scaled bounding boxes, each represented as a list of coordinates [x0_scaled, y0_scaled, x1_scaled, y1_scaled].
+    """
     bboxes_scaled = []
     for bbox, width_height in zip(bboxes, width_height_list):
         bbox_scaled = []
@@ -256,6 +333,17 @@ def get_scaled_bboxes(bboxes, scale_factor = 2, width_height_list = []):
     return bboxes_scaled
 
 def get_shifted_bboxes(bboxes, shift, width_height_list = []):
+    """
+    Get shifted bounding boxes based on the specified shift (translation vector (a,a)).
+
+    Parameters:
+        bboxes (list): List of bounding boxes, each represented as a list of coordinates [x0, y0, x1, y1].
+        shift (int): The amount by which to shift the bounding boxes.
+        width_height_list (list): List of tuples containing width and height of each image corresponding to the bounding boxes.
+
+    Returns:
+        list: List of shifted bounding boxes, each represented as a list of coordinates [x0_shifted, y0_shifted, x1_shifted, y1_shifted].
+    """
     bboxes_shifted = []
     for bbox, width_height in zip(bboxes, width_height_list):
         bbox_shifted = []
@@ -274,6 +362,18 @@ def get_shifted_bboxes(bboxes, shift, width_height_list = []):
     return bboxes_shifted         
     
 def get_widths_heights(id_to_image_train_json, id_to_image_test_json, path = '/home/prashant/DocDatasets/FUNSD/raw'):
+    """
+    Get the widths and heights of images in the training and testing datasets.
+
+    Parameters:
+        id_to_image_train_json (dict): A dictionary mapping image IDs to their corresponding filenames in the training dataset.
+        id_to_image_test_json (dict): A dictionary mapping image IDs to their corresponding filenames in the testing dataset.
+        path (str): The path to the root directory of the dataset.
+
+    Returns:
+        id_to_width_height_train (list): contains tuples of (width, height) for images in the training dataset.
+        id_to_width_height_test (list): contains tuples of (width, height) for images in the testing dataset.
+    """
     train_path = os.path.join(path, 'training_data/images')
     test_path = os.path.join(path, 'testing_data/images')
     id_to_width_height_train, id_to_width_height_test = [], []
@@ -293,6 +393,20 @@ def get_widths_heights(id_to_image_train_json, id_to_image_test_json, path = '/h
     return id_to_width_height_train, id_to_width_height_test
 
 def get_widths_heights_cord(id_to_image_train_json, id_to_image_eval_json, id_to_image_test_json, path = '/home/prashant/DocDatasets/CORD/raw'):
+    """
+    Get the widths and heights of images in the training, evaluation, and testing datasets for CORD dataset.
+
+    Parameters:
+        id_to_image_train_json (dict): A dictionary mapping image IDs to their corresponding filenames in the training dataset.
+        id_to_image_eval_json (dict): A dictionary mapping image IDs to their corresponding filenames in the evaluation dataset.
+        id_to_image_test_json (dict): A dictionary mapping image IDs to their corresponding filenames in the testing dataset.
+        path (str): The path to the root directory of the dataset.
+
+    Returns:
+        id_to_width_height_train (list): contains tuples of (width, height) for images in the training dataset.
+        id_to_width_height_eval (list): contains tuples of (width, height) for images in the evaluation dataset.
+        id_to_width_height_test (list): contains tuples of (width, height) for images in the testing dataset.
+    """
     train_path = os.path.join(path, 'train/image')
     eval_path = os.path.join(path, 'dev/image')
     test_path = os.path.join(path, 'test/image')
@@ -381,6 +495,18 @@ def is_bbox_valid(point_start, point_end, bb2):
     return False
 
 def get_valid_bboxes(bb_tok_pair, theta, width = 762, height = 1000):
+    """
+    Get valid bounding boxes within the given angle range from a reference bounding box.
+
+    Parameters:
+        bb_tok_pair (list): List of bounding box-token pairs for each sample.
+        theta (float): The angle in radians used for filtering bounding boxes.
+        width (int): The width of the image. 
+        height (int): The height of the image.
+
+    Returns:
+        defaultdict: A dictionary mapping each bounding box-token pair to a list of valid bounding box-token pairs within the angle range.
+    """
     bb_tok_angle_range_filtered = defaultdict(list)
     for i, b_t1 in enumerate(bb_tok_pair):
         bb1, tok1 = b_t1[0], b_t1[1]
@@ -397,6 +523,22 @@ def get_valid_bboxes(bb_tok_pair, theta, width = 762, height = 1000):
     return bb_tok_angle_range_filtered
 
 def make_edges_new_angles_v2(bb_tok_pairs, theta, width_height_list, num_edges = 4, threshold = 300 ,plot_flag = False):
+    """
+    Create edges based on the closest edges found by drawing a ray/line segment from the centroid of a bounding box.
+    (K-nearest neigbors at multiple angles heuristic)
+
+    Parameters:
+        bb_tok_pairs (list): List of lists containing bounding box-token pairs for each sample.
+        theta (float): The angle in degrees used for finding closest edges.
+        width_height_list (list): List of tuples containing width and height of each image corresponding to the bounding boxes.
+        num_edges (int): The maximum number of edges to consider.
+        threshold (int): The maximum distance threshold for considering an edge.
+        plot_flag (bool): Flag to indicate whether to plot the edges. (used when visualizing test images)
+
+    Returns:
+        list: A list of dictionaries containing edge mappings for each sample in the dataset.
+              Each dictionary maps a bounding box-token pair to a list of connected bounding box-token pairs.
+    """
     # bb_cent_map = get_centroid_map(bboxes)
     edge_maps, edges_pts_coords_info_maps = [], []
     for k, bb_tok_pair_norm in enumerate(bb_tok_pairs):
@@ -441,6 +583,17 @@ def make_edges_new_angles_v2(bb_tok_pairs, theta, width_height_list, num_edges =
     return edge_maps
 
 def get_idx_pair_maps(bb_tok_pairs):
+    """
+    Get index-mapping dictionaries for bounding box-token pairs.
+
+    Parameters:
+        bb_tok_pairs (list): List of lists containing bounding box-token pairs for each sample.
+
+    Returns:
+        tuple: A tuple containing two dictionaries.
+               - The first dictionary maps indices to bounding box-token pairs.
+               - The second dictionary maps bounding box-token pairs to indices.
+    """
     # idx_pair_map, pair_idx_map = {},{}
     idx_pair_maps, pair_idx_maps = [{} for _ in range(len(bb_tok_pairs))], [{} for _ in range(len(bb_tok_pairs))]
     for k, bb_tok_pair in enumerate(bb_tok_pairs):
@@ -545,6 +698,16 @@ def get_edges_idxs_v3(bb_tok_pairs, types = ['vd','vu','hr','hl']):
     return batch_edges_idxs
 
 def get_edges_idxs_new(bb_tok_pairs, types = ['vd','vu','hr','hl']):
+    """
+    Get indices of edges between bounding box-token pairs.
+
+    Parameters:
+        bb_tok_pairs (list): List of lists containing bounding box-token pairs for each sample.
+        types (list): List of edge types to consider. Default is ['vd', 'vu', 'hr', 'hl'].
+
+    Returns:
+        list: A list of arrays containing edge indices for each sample in the dataset.
+    """
     edge_maps = make_edges_new(bb_tok_pairs)
     idx_pair_maps, pair_idx_maps = get_idx_pair_maps(bb_tok_pairs)
     batch_edges_idxs = []
@@ -583,6 +746,18 @@ def get_edges_idxs_new_angles(bb_tok_pairs, theta1, theta2, width_height_list, t
     return batch_edges_idxs
 
 def get_edges_idxs_new_angles_v2(bb_tok_pairs, theta, width_height_list):
+    """
+    Get indices of edges based on the closest edges found by drawing a ray/line segment from the centroid of a bounding box.
+    (K-nearest neigbors at multiple angles heuristic)
+
+    Parameters:
+        bb_tok_pairs (list): List of lists containing bounding box-token pairs for each sample.
+        theta (float): The angle in degrees used for finding closest edges.
+        width_height_list (list): List of tuples containing width and height of each image corresponding to the bounding boxes.
+
+    Returns:
+        list: A list of arrays containing edge indices for each sample in the dataset.
+    """
     edge_maps = make_edges_new_angles_v2(bb_tok_pairs, theta, width_height_list)
     idx_pair_maps, pair_idx_maps = get_idx_pair_maps(bb_tok_pairs)
     batch_edges_idxs = []
@@ -665,6 +840,18 @@ def get_edges_idxs_v2(bb_tok_pairs, types = ['vd','vu','hr','hl'] ):
     return batch_edges_idxs
 
 def make_edges_new(bb_tok_pairs, num_edges = 4, plot_flag = False):
+    """
+    Create edges based on bounding box-token pairs.
+
+    Parameters:
+        bb_tok_pairs (list): List of lists containing bounding box-token pairs for each sample.
+        num_edges (int): Number of edges to consider for each bounding box-token pair. Default is 4.
+        plot_flag (bool): Flag to indicate whether to plot the edges. (used when visualizing test images)
+
+    Returns:
+        list: A list of dictionaries containing edge mappings for each sample in the dataset.
+        Each dictionary maps a bounding box-token pair to a list of connected bounding box-token pairs.
+    """
     # bb_cent_map = get_centroid_map(bboxes)
     edge_maps, edges_pts_coords_info_maps = [], []
     for bb_tok_pair in bb_tok_pairs:
@@ -821,8 +1008,18 @@ def get_adjs_from_labels(dataset, pickle_path, type, feats_shape = 512):
     return adjs
 
 def get_adjs_new(dataset, feats_shape = 512):
-    '''Finding closest edge not only based on centroid but using line segments of the bounding boxes'''
-    
+    """
+    Get adjacency matrices based on the closest edge using line segments of the bounding boxes.
+    (K-nearest neighbors in space heuristic)
+
+    Parameters:
+        dataset (dict): The dataset containing input IDs and bounding boxes.
+        feats_shape (int): The shape of the feature vectors.
+
+    Returns:
+        list: A list of adjacency matrices for each sample in the dataset.
+              Each adjacency matrix is represented as a numpy array.
+    """
     input_ids = dataset['input_ids']
     bboxes = dataset['bbox']
     bboxes = [[tuple(x) for x in bb]for bb in bboxes]
@@ -867,7 +1064,20 @@ def get_adjs_new_angles(dataset, pickle_path, type, theta1 = 0, theta2 = 30, wid
     return adjs
 
 def get_adjs_new_angles_v2(dataset, theta, width_height_list, feats_shape = 512):
-    '''Find closest edges by drawing a ray/line segment from the centroid of a bounding box'''
+    """
+    Get adjacency matrices based on the closest edges found by drawing a ray/line segment from the centroid of a bounding box.
+    (K-nearest neigbors at multiple angles heuristic)
+
+    Parameters:
+        dataset (dict): The dataset containing input IDs, bounding boxes, etc.
+        theta (float): The angle in degrees used for finding closest edges.
+        width_height_list (list): List of tuples containing width and height of each image in the dataset.
+        feats_shape (int): The shape of the feature vectors.
+
+    Returns:
+        list: A list of adjacency matrices for each sample in the dataset.
+              Each adjacency matrix is represented as a numpy array.
+    """
     input_ids = dataset['input_ids']
     bboxes = dataset['bbox']
     bboxes = [[tuple(x) for x in bb]for bb in bboxes]
@@ -932,7 +1142,13 @@ def load_data(path="./data/cora/", dataset="cora"):
     return adj, features, labels, idx_train, idx_val, idx_test
 
 def normalize_adj(mx):
-    """Row-normalize sparse matrix"""
+    """
+    Row-normalize sparse matrix.
+    Parameters:
+        mx (scipy.sparse matrix): Sparse matrix to be normalized.
+    Returns:
+        scipy.sparse matrix: Row-normalized sparse matrix.
+    """
     rowsum = np.array(mx.sum(1))
     r_inv_sqrt = np.power(rowsum, -0.5).flatten()
     r_inv_sqrt[np.isinf(r_inv_sqrt)] = 0.
@@ -940,7 +1156,14 @@ def normalize_adj(mx):
     return mx.dot(r_mat_inv_sqrt).transpose().dot(r_mat_inv_sqrt)
 
 def normalize_features(mx):
-    """Row-normalize sparse matrix"""
+    """
+    Row-normalize sparse matrix.
+
+    Parameters:
+        mx (scipy.sparse matrix): Sparse matrix to be normalized.
+    Returns:
+        scipy.sparse matrix: Row-normalized sparse matrix.
+    """
     rowsum = np.array(mx.sum(1))
     r_inv = np.power(rowsum, -1).flatten()
     r_inv[np.isinf(r_inv)] = 0.
