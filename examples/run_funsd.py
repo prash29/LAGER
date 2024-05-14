@@ -374,7 +374,7 @@ def main():
     id_to_image_train_json = {j:i for i, j in image_to_id_train_json.items()}
     image_to_id_test_json = json.load(open(path_config['image_to_id_test']))
     id_to_image_test_json = {j:i for i, j in image_to_id_test_json.items()}
-    width_height_train, width_height_test = get_widths_heights(id_to_image_train_json, id_to_image_test_json)
+    width_height_train, width_height_test = get_widths_heights(id_to_image_train_json, id_to_image_test_json, path = path_config['dataset_path'])
     #width_height_train = [width_height_train[i] for i in ids_to_train]
 
 

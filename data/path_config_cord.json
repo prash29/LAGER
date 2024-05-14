@@ -1,3 +1,4 @@
 {"pickle_path" : "/home/prashant/unilm/layoutlmv3/data/funsd-aug2", "few_shot_info":"/home/prashant/unilm/layoutlmv3/data/cord_few_shot_info.json",
 "image_to_id_dict":"/home/prashant/unilm/layoutlmv3/data/image_to_id_train_cord.json", "image_to_id_train":"data/id_to_image_train_cord.json",
-"image_to_id_eval":"data/id_to_image_eval_cord.json","image_to_id_test":"data/image_to_id_test_cord.json", "results_path":"/home/prashant/lager_repo/results"}
+"image_to_id_eval":"data/id_to_image_eval_cord.json","image_to_id_test":"data/image_to_id_test_cord.json", "results_path":"/home/prashant/lager_repo/results",
+"dataset_path":"/home/prashant/LAGER/data/DocDatasets/CORD/raw"}

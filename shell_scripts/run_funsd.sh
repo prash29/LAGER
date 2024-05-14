@@ -1,6 +1,6 @@
-# conda activate layoutlmft
+# conda activate layoutlmv3
 #path='/home/prashant/unilm/layoutlmv3'
-path='/home/prashant/lager_repo'
+path='/home/prashant/LAGER'
 heuristic='nearest'
 # echo $heuristic > 
 deg=4

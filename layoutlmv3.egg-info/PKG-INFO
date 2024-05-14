@@ -1,7 +1,13 @@
 Metadata-Version: 2.1
 Name: layoutlmv3
 Version: 0.1
+Summary: UNKNOWN
 Home-page: https://github.com/microsoft/unilm/tree/master/layoutlmv3
 Author: LayoutLM Team
+License: UNKNOWN
+Platform: UNKNOWN
 Requires-Python: >=3.7
 Provides-Extra: dev
+
+UNKNOWN
+

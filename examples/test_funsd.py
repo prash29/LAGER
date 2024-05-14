@@ -350,7 +350,6 @@ def main():
                 std=torch.tensor(std))
         ])
 
-    bp()
     gat_config_params = json.load(open("data/gat_params.json",'r'))
 
     # Tokenize all texts and align the labels with them.

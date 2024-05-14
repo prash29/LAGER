@@ -1,0 +1,4 @@
+data/DocDatasets/*
+data/pickled_adjs/*
+results/*
+logs/*
