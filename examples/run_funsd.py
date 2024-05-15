@@ -193,6 +193,7 @@ def main():
         if len(rem_args) > 2:
             nheads = int(rem_args[2].split('-')[-1])
             heuristic = rem_args[3].split('-')[-1]
+            num_edges = int(rem_args[4].split('-')[-1])
 
         else:
             nheads  = 8
@@ -325,7 +326,7 @@ def main():
     )
 
     """
-    Update the config with
+    Update the config with GAT parameters
     """
     config = update_config(config)
 
@@ -335,7 +336,7 @@ def main():
         use_fast=True,
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
-        add_prefix_space=True # For RoBERTa
+        # add_prefix_space=True # For RoBERTa
     )
 
     model = AutoModelForTokenClassification.from_pretrained(
@@ -472,7 +473,7 @@ def main():
             except:
                 theta_values = [x*theta for x in range(1,360//theta + 1)]
                 for theta1 in theta_values:
-                    adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, theta1, width_height_list))
+                    adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, theta1, width_height_list, num_edges))
                     all_adjs.append(adjs)
                 
                 all_adjs = np.array(all_adjs)
@@ -493,7 +494,7 @@ def main():
                 tokenized_inputs["adjs"] = adjs
                 return tokenized_inputs
             except:
-                adjs = np.array(get_adjs_new(tokenized_inputs))
+                adjs = np.array(get_adjs_new(tokenized_inputs, num_edges))
                 if type1=='test':
                     if not os.path.exists(adj_save_path):
                             os.makedirs(adj_save_path)

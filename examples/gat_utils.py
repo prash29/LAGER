@@ -697,7 +697,7 @@ def get_edges_idxs_v3(bb_tok_pairs, types = ['vd','vu','hr','hl']):
         batch_edges_idxs.append(np.array(edges_idxs))
     return batch_edges_idxs
 
-def get_edges_idxs_new(bb_tok_pairs, types = ['vd','vu','hr','hl']):
+def get_edges_idxs_new(bb_tok_pairs, num_edges = 4):
     """
     Get indices of edges between bounding box-token pairs.
 
@@ -708,7 +708,7 @@ def get_edges_idxs_new(bb_tok_pairs, types = ['vd','vu','hr','hl']):
     Returns:
         list: A list of arrays containing edge indices for each sample in the dataset.
     """
-    edge_maps = make_edges_new(bb_tok_pairs)
+    edge_maps = make_edges_new(bb_tok_pairs, num_edges)
     idx_pair_maps, pair_idx_maps = get_idx_pair_maps(bb_tok_pairs)
     batch_edges_idxs = []
     for edge_map, pair_idx_map in zip(edge_maps, pair_idx_maps):
@@ -745,7 +745,7 @@ def get_edges_idxs_new_angles(bb_tok_pairs, theta1, theta2, width_height_list, t
         batch_edges_idxs.append(np.array(edges_idxs))
     return batch_edges_idxs
 
-def get_edges_idxs_new_angles_v2(bb_tok_pairs, theta, width_height_list):
+def get_edges_idxs_new_angles_v2(bb_tok_pairs, theta, width_height_list, num_edges = 4):
     """
     Get indices of edges based on the closest edges found by drawing a ray/line segment from the centroid of a bounding box.
     (K-nearest neigbors at multiple angles heuristic)
@@ -758,7 +758,7 @@ def get_edges_idxs_new_angles_v2(bb_tok_pairs, theta, width_height_list):
     Returns:
         list: A list of arrays containing edge indices for each sample in the dataset.
     """
-    edge_maps = make_edges_new_angles_v2(bb_tok_pairs, theta, width_height_list)
+    edge_maps = make_edges_new_angles_v2(bb_tok_pairs, theta, width_height_list, num_edges)
     idx_pair_maps, pair_idx_maps = get_idx_pair_maps(bb_tok_pairs)
     batch_edges_idxs = []
     for edge_map, pair_idx_map in zip(edge_maps, pair_idx_maps):
@@ -1007,7 +1007,7 @@ def get_adjs_from_labels(dataset, pickle_path, type, feats_shape = 512):
         adjs.append(adj)
     return adjs
 
-def get_adjs_new(dataset, feats_shape = 512):
+def get_adjs_new(dataset, num_edges = 4, feats_shape = 512):
     """
     Get adjacency matrices based on the closest edge using line segments of the bounding boxes.
     (K-nearest neighbors in space heuristic)
@@ -1024,7 +1024,7 @@ def get_adjs_new(dataset, feats_shape = 512):
     bboxes = dataset['bbox']
     bboxes = [[tuple(x) for x in bb]for bb in bboxes]
     bb_tok_pairs = [[(bb, tok) for bb, tok in zip(bbox, in_id)] for bbox, in_id in zip(bboxes, input_ids)]
-    edges_idxs = get_edges_idxs_new(bb_tok_pairs)
+    edges_idxs = get_edges_idxs_new(bb_tok_pairs, num_edges)
     adjs = []
     for edges in edges_idxs:
         adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])), shape=(feats_shape,feats_shape), dtype=np.float32)
@@ -1063,7 +1063,7 @@ def get_adjs_new_angles(dataset, pickle_path, type, theta1 = 0, theta2 = 30, wid
         adjs.append(adj)
     return adjs
 
-def get_adjs_new_angles_v2(dataset, theta, width_height_list, feats_shape = 512):
+def get_adjs_new_angles_v2(dataset, theta, width_height_list, num_edges = 4, feats_shape = 512):
     """
     Get adjacency matrices based on the closest edges found by drawing a ray/line segment from the centroid of a bounding box.
     (K-nearest neigbors at multiple angles heuristic)
@@ -1082,7 +1082,7 @@ def get_adjs_new_angles_v2(dataset, theta, width_height_list, feats_shape = 512)
     bboxes = dataset['bbox']
     bboxes = [[tuple(x) for x in bb]for bb in bboxes]
     bb_tok_pairs = [[(bb, tok) for bb, tok in zip(bbox, in_id)] for bbox, in_id in zip(bboxes, input_ids)]
-    edges_idxs = get_edges_idxs_new_angles_v2(bb_tok_pairs, theta, width_height_list)
+    edges_idxs = get_edges_idxs_new_angles_v2(bb_tok_pairs, theta, width_height_list, num_edges)
     adjs = []
     for edges in edges_idxs:
         try:

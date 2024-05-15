@@ -20,7 +20,7 @@ do
    --max_steps 2000 --learning_rate 1e-5  \
    --load_best_model_at_end --metric_for_best_model f1 --save_strategy steps --save_steps 200 --save_strategy steps --save_total_limit 1  \
   --evaluation_strategy steps --eval_steps 200 --logging_steps 100 --logging_first_step --logging_strategy steps \
-   --per_device_train_batch_size 2 --dataloader_num_workers 8  --warmup_ratio 0.1 --gradient_accumulation_steps 1  --fp16  --sz-$sz --sd-$sd --hd-$hd --heuristic-$heuristic /home/prashant/lager_repo/data/path_config.json
+   --per_device_train_batch_size 2 --dataloader_num_workers 8  --warmup_ratio 0.1 --gradient_accumulation_steps 1  --fp16  --sz-$sz --sd-$sd --hd-$hd --heuristic-$heuristic --deg-$deg /home/prashant/lager_repo/data/path_config.json
 
   done
   done
