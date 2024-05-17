@@ -413,10 +413,7 @@ def main():
             # We use this argument because the texts in our dataset are lists of words (with a label for each word).
             is_split_into_words=True,
         )
-        if type1=='test':
-            width_height_list = [width_height_test[i] for i in tokenized_inputs['overflow_to_sample_mapping']]
-        else:
-            width_height_list = [width_height_train[i] for i in tokenized_inputs['overflow_to_sample_mapping']]
+        
         labels = []
         bboxes = []
         images = []
