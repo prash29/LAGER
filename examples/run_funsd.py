@@ -220,6 +220,8 @@ def main():
     timestamp = int(datetime.timestamp(datetime.now()))
     
     ### Logs are saved based on the timestamp of the run
+    if not os.dir.exists('logs'):
+        os.makedirs('logs')
     logging.basicConfig(
         filename=f'logs/test-lmv3-gat-{sz}-{sd}-{heuristic}-{timestamp}.log',
         filemode='a',
@@ -375,7 +377,8 @@ def main():
     id_to_image_train_json = {j:i for i, j in image_to_id_train_json.items()}
     image_to_id_test_json = json.load(open(path_config['image_to_id_test']))
     id_to_image_test_json = {j:i for i, j in image_to_id_test_json.items()}
-    width_height_train, width_height_test = get_widths_heights(id_to_image_train_json, id_to_image_test_json, path = path_config['dataset_path'])
+    if heuristic == 'angles':
+        width_height_train, width_height_test = get_widths_heights(id_to_image_train_json, id_to_image_test_json, path = path_config['dataset_path'])
     #width_height_train = [width_height_train[i] for i in ids_to_train]
 
 
@@ -471,6 +474,11 @@ def main():
                 tokenized_inputs["adjs"] = all_adjs
                 return tokenized_inputs
             except:
+                if type1=='test':
+                    width_height_list = [width_height_test[i] for i in tokenized_inputs['overflow_to_sample_mapping']]
+                else:
+                    width_height_list = [width_height_train[i] for i in tokenized_inputs['overflow_to_sample_mapping']]
+
                 theta_values = [x*theta for x in range(1,360//theta + 1)]
                 for theta1 in theta_values:
                     adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, theta1, width_height_list, num_edges))

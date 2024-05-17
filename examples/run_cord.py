@@ -200,6 +200,8 @@ def main():
 
     # Setup logging
     timestamp = int(datetime.timestamp(datetime.now()))
+    if not os.dir.exists('logs'):
+        os.makedirs('logs')
     
     logging.basicConfig(
         filename=f'logs/test-lmv3-gat-{sz}-{sd}-{heuristic}-{timestamp}.log',
@@ -350,8 +352,9 @@ def main():
     # id_to_image_test_json = {j:i for i, j in image_to_id_test_json.items()}
     id_to_image_test_json = json.load(open(path_config['image_to_id_test']))
 
-    width_height_train, width_height_eval, width_height_test = get_widths_heights_cord(id_to_image_train_json, id_to_image_eval_json, id_to_image_test_json)
-    #width_height_train = [width_height_train[i] for i in ids_to_train]
+    if heuristic == 'angles':
+        width_height_train, width_height_eval, width_height_test = get_widths_heights_cord(id_to_image_train_json, id_to_image_eval_json, id_to_image_test_json)
+
 
 
 
@@ -385,12 +388,6 @@ def main():
             is_split_into_words=True,
         )
 
-        if type1=='train':
-            width_height_list = width_height_train
-        elif type1=='eval':
-            width_height_list = width_height_eval
-        else:
-            width_height_list = width_height_test
 
         labels = []
         bboxes = []
@@ -445,6 +442,13 @@ def main():
                 tokenized_inputs["adjs"] = all_adjs
                 return tokenized_inputs
             except:
+                if type1=='train':
+                    width_height_list = width_height_train
+                elif type1=='eval':
+                    width_height_list = width_height_eval
+                else:
+                    width_height_list = width_height_test
+                    
                 theta_values = [x*theta for x in range(1,360//theta + 1)]
                 for theta1 in theta_values:
                     adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, theta1, width_height_list, num_edges))
