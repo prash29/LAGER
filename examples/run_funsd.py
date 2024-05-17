@@ -465,7 +465,7 @@ def main():
         '''Conditional statement block based on the type of heuristic - angles, nearest or baseline'''
         if heuristic == 'angles':
             '''K-nearest neighbors at multiple angles heuristic'''
-            ## Try-except block to load pickled adjacency matrix for the test set
+            ## Try-except block to load the pickled adjacency matrix for the test set
             try:
                 all_adjs = pickle.load(open(os.path.join(adj_save_path,f'funsd_{type1}_adjs_{theta}_angles_v2_new_full.pkl'),'rb'))
                 tokenized_inputs["adjs"] = all_adjs

@@ -152,7 +152,6 @@ def pnt2line(pnt, start, end):
 Functions for finding min. distance between two bounding boxes and some helper functions
 '''
 
-
 def get_corner_coords(bbox):
     """
     Get the corner coordinates of a bounding box.
@@ -240,16 +239,18 @@ def normalize_box(bbox, width, height):
 def centroid(bbox):
     return ((bbox[0] + (bbox[2]-bbox[0])/2), (bbox[1] + (bbox[3] - bbox[1])/2))
 
-def get_centroid_map(bboxes):
-    centroid_map = {}
-    for bb in bboxes:
-        centroid_map[bb] = centroid(bb)
-    return centroid_map
-    
 def euclid_dist(p1, p2):
     return np.linalg.norm(np.array(p1) - np.array(p2))
 
 def get_rotated_point(coord, center, angle):
+    """
+    Get the rotated coordinates of a point based on the specified angle.
+    Parameters:
+        coord (tuple): The point coordinates (x, y).
+        center (tuple): The center coordinates (x, y) of the rotation.
+        angle (int): The angle of rotation in degrees.
+    Returns:
+        tuple: The rotated coordinates of the point (x_rot, y_rot)."""
     x = (coord[0] - center[0])*np.cos(math.radians(angle)) - ((coord[1] - center[1])*np.sin(math.radians(angle))) + center[0]
     y = (coord[0] - center[0])*np.sin(math.radians(angle)) + ((coord[1] - center[1])*np.cos(math.radians(angle))) + center[1]
     if x<0:
@@ -433,8 +434,14 @@ def get_widths_heights_cord(id_to_image_train_json, id_to_image_eval_json, id_to
     return id_to_width_height_train, id_to_width_height_eval, id_to_width_height_test
 
 def angle_between(p1, p2, p3):
-    '''Get angle between the two lines formed by (x_1, y_1) & (x_2, y_2) : 
-        y = y_1 and y = ((y_2 - y_1)/(x_2 - x_1)) x'''
+    """
+    Get the angle between two lines formed by three points.
+    Parameters:
+        p1 (tuple): The first point represented as a tuple (x1, y1).
+        p2 (tuple): The second point represented as a tuple (x2, y2).
+        p3 (tuple): The third point represented as a tuple (x3, y3).
+    Returns:
+        float: The angle between the two lines formed by the three points."""
     x1, y1 = p1
     x2, y2 = p2
     x3, y3 = p3
@@ -443,8 +450,16 @@ def angle_between(p1, p2, p3):
     return deg2 - deg1 if deg1 <= deg2 else 360 - (deg1 - deg2)
 
 def is_bbox_in_range(bb1, bb2, theta1, theta2, width):
-    ''' Check if the line between the centroid of bb1 and any of the corners of bb2 
-    are in the range [theta_1, theta_2]'''
+    """
+    Check if the line between the centroid of bb1 and any of the corners of bb2 are in the range [theta1, theta2].
+    Parameters:
+        bb1 (list): Bounding box coordinates [x0, y0, x1, y1].
+        bb2 (list): Bounding box coordinates [x0, y0, x1, y1].
+        theta1 (float): The lower angle in radians used for filtering bounding boxes.
+        theta2 (float): The upper angle in radians used for filtering bounding boxes.
+        width (int): The width of the image.
+    Returns:
+        bool: True if the line between the centroid of bb1 and any of the corners of bb2 are in the range [theta1, theta2], False otherwise."""
     point_1 = centroid(bb1)
     coords_2 = get_corner_coords(bb2)
     point_0 = (width, point_1[1])
@@ -456,10 +471,15 @@ def is_bbox_in_range(bb1, bb2, theta1, theta2, width):
     return False
 
 def get_bboxes_in_angle_range(bb_tok_pair, theta1, theta2, width = 762):
-    ''' Get a dictionry where key = (bb, tok) and values are a list where each element is
-    (bb', tok') where we check if line we draw from centroid of bb to any corner in bb'
-    are in [theta_1, theta_2]
-    '''
+    """
+    Get bounding boxes within the given angle range from a reference bounding box.
+    Parameters:
+        bb_tok_pair (list): List of bounding box-token pairs for each sample.
+        theta1 (float): The lower angle in radians used for filtering bounding boxes.
+        theta2 (float): The upper angle in radians used for filtering bounding boxes.
+        width (int): The width of the image. Default is 762.
+    Returns:
+        defaultdict: A dictionary mapping each bounding box-token pair to a list of bounding box-token pairs within the angle range."""
     bb_tok_angle_range_filtered = defaultdict(list)
     for i, b_t1 in enumerate(bb_tok_pair):
         bb1, tok1 = b_t1[0], b_t1[1]
@@ -474,17 +494,23 @@ def get_bboxes_in_angle_range(bb_tok_pair, theta1, theta2, width = 762):
     return bb_tok_angle_range_filtered
 
 def get_end_coord_from_angle(start, angle, width, height):
+    ''' Get the end coordinate of a line segment from the start coordinate at a given angle'''
     x = min(width, start[0] + (width*np.cos(np.radians(-angle))))
     y = min(height, start[1] + (height*np.sin(np.radians(-angle))))
     return (x,y)
 
 def ccw(a,b,c):
+    '''Check if three points are in counter-clockwise order.'''
     return (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0])
 
 def intersect(a,b,c,d):
+    '''Check if two line segments intersect.'''
     return ccw(a,c,d) != ccw(b,c,d) and ccw(a,b,c) != ccw(a,b,d)
 
 def is_bbox_valid(point_start, point_end, bb2):
+    """
+    Check if a bounding box is valid based on the intersection of the line segment with the bounding box.
+    """
     coords_2 = get_corner_coords(bb2)
     
     if intersect(point_start, point_end, coords_2[0], coords_2[1]) or \
@@ -539,7 +565,7 @@ def make_edges_new_angles_v2(bb_tok_pairs, theta, width_height_list, num_edges =
         list: A list of dictionaries containing edge mappings for each sample in the dataset.
               Each dictionary maps a bounding box-token pair to a list of connected bounding box-token pairs.
     """
-    # bb_cent_map = get_centroid_map(bboxes)
+
     edge_maps, edges_pts_coords_info_maps = [], []
     for k, bb_tok_pair_norm in enumerate(bb_tok_pairs):
         # bb_tok_pair = [(tuple(unnormalize_box(bb, width_height_list[k][0], width_height_list[k][1])), tok) for bb, tok in bb_tok_pair_norm]
@@ -605,97 +631,6 @@ def get_idx_pair_maps(bb_tok_pairs):
             # idx_pair_map[i] = (bb_tok_map[bb], bb)
         # idx_pair_maps[k] = {j:i for i,j in pair_idx_maps[k].items()}
     return idx_pair_maps, pair_idx_maps
-    
-def valid_dist(bb1, bb2, type, thresh = None):
-    cen_bb1, cen_bb2 = centroid(bb1), centroid(bb2)
-    if type == 'vd':
-        height = abs(bb1[3] - bb1[1])
-        if cen_bb1[1] < cen_bb2[1] and abs(cen_bb1[1] - cen_bb2[1]) > height:
-            return True
-        return False   
-    elif type == 'vu':
-        height = abs(bb1[3] - bb1[1])
-        if cen_bb1[1] > cen_bb2[1] and abs(cen_bb1[1] - cen_bb2[1]) > height:
-            return True
-        return False   
-    elif type == 'hr':
-        width = abs(bb1[2] - bb1[0])
-        if cen_bb1[0] < cen_bb2[0] and abs(cen_bb1[0] - cen_bb2[0]) > width:
-            return True
-        return False   
-    elif type == 'hl':
-        width = abs(bb1[2] - bb1[0])
-        if cen_bb1[0] > cen_bb2[0] and abs(cen_bb1[0] - cen_bb2[0]) > width:
-            return True
-        return False
-
-def make_edges_v3(bb_tok_pairs, types = ['vd','vu','hr','hl'], num_edges = 4):
-    # bb_cent_map = get_centroid_map(bboxes)
-    edge_maps = []
-    for bb_tok_pair in bb_tok_pairs:
-        edge_map = defaultdict(list)
-        for i, b_t1 in enumerate(bb_tok_pair):
-            curr_dists, uniq_edges = [], []
-            bb1, tok1 = b_t1[0], b_t1[1]
-            if tok1==0 or tok1==101 or tok1==102 or bb1 == (0,0,0,0):
-                continue
-            for j, b_t2 in enumerate(bb_tok_pair):
-                bb2, tok2 = b_t2[0], b_t2[1]
-                if (bb1==bb2) or tok2==0 or tok2==101 or tok2==102 or (bb2 == (0,0,0,0)):
-                        continue
-                # if not valid_dist(bb1, bb2, type):
-                #     continue
-                dist = euclid_dist(bb1, bb2)
-                curr_dists.append([(bb2, tok2), dist])
-            curr_dists.sort(key = lambda x:x[1])
-            for curr in curr_dists[:num_edges]:
-                if curr[0][0] not in uniq_edges:
-                    uniq_edges.append(curr[0][0])
-                if len(uniq_edges) > num_edges:
-                    break
-                edge_map[(bb1, tok1)].append(curr[0])
-        edge_maps.append(edge_map)
-    return edge_maps
-
-def make_edges_from_label(bb_label_pairs):
-    # bb_cent_map = get_centroid_map(bboxes)
-    edge_maps = []
-    for bb_lab_pair in bb_label_pairs:
-        # bb_tok_num_edge_count = {x:0 for x in bb_tok_pair}
-        edge_map = defaultdict(list)
-        for i, b_l1 in enumerate(bb_lab_pair):
-            curr_dists, uniq_edges = [], []
-            bb1, lab1 = b_l1[0], b_l1[1]
-            if lab1==-100 or bb1 == (0,0,0,0):
-                continue
-            for j, b_l2 in enumerate(bb_lab_pair):
-                bb2, lab2 = b_l2[0], b_l2[1]
-                if (bb1==bb2) or lab2==-100 or (bb2 == (0,0,0,0)):
-                        continue
-                if lab1==lab2:
-                    edge_map[(bb1, lab1)].append((bb2, lab2))
-                # if not valid_dist(bb1, bb2, type):
-        edge_maps.append(edge_map)
-    return edge_maps
-
-def get_edges_idxs_v3(bb_tok_pairs, types = ['vd','vu','hr','hl']):
-    edge_maps = make_edges_v3(bb_tok_pairs)
-    idx_pair_maps, pair_idx_maps = get_idx_pair_maps(bb_tok_pairs)
-    batch_edges_idxs = []
-    for edge_map, pair_idx_map in zip(edge_maps, pair_idx_maps):
-        edges_idxs = []
-        for x, y in edge_map.items():
-            for k in y:
-                if tuple([pair_idx_map[x], pair_idx_map[k]]) not in edges_idxs and tuple([pair_idx_map[k], pair_idx_map[x]]) not in edges_idxs:
-                    edges_idxs.append(tuple([pair_idx_map[x], pair_idx_map[k]]))
-        # for pair, id in pair_idx_map.items():
-        #     _, tok = pair[0], pair[1]
-        #     if tok==101 or tok==102 or tok==0:
-        #         continue
-        #     edges_idxs.append((pair_idx_map[((0,0,0,0),101)], id)) # map[101]
-        #     edges_idxs.append((pair_idx_map[((0,0,0,0),102)], id)) # map[102]
-        batch_edges_idxs.append(np.array(edges_idxs))
-    return batch_edges_idxs
 
 def get_edges_idxs_new(bb_tok_pairs, num_edges = 4):
     """
@@ -726,24 +661,6 @@ def get_edges_idxs_new(bb_tok_pairs, num_edges = 4):
         batch_edges_idxs.append(np.array(edges_idxs))
     return batch_edges_idxs
 
-def get_edges_idxs_new_angles(bb_tok_pairs, theta1, theta2, width_height_list, types = ['vd','vu','hr','hl']):
-    edge_maps = make_edges_new_angles(bb_tok_pairs,theta1, theta2, width_height_list)
-    idx_pair_maps, pair_idx_maps = get_idx_pair_maps(bb_tok_pairs)
-    batch_edges_idxs = []
-    for edge_map, pair_idx_map in zip(edge_maps, pair_idx_maps):
-        edges_idxs = []
-        for x, y in edge_map.items():
-            for k in y:
-                if tuple([pair_idx_map[x], pair_idx_map[k]]) not in edges_idxs and tuple([pair_idx_map[k], pair_idx_map[x]]) not in edges_idxs:
-                    edges_idxs.append(tuple([pair_idx_map[x], pair_idx_map[k]]))
-        # for pair, id in pair_idx_map.items():
-        #     _, tok = pair[0], pair[1]
-        #     if tok==101 or tok==102 or tok==0:
-        #         continue
-        #     edges_idxs.append((pair_idx_map[((0,0,0,0),101)], id)) # map[101]
-        #     edges_idxs.append((pair_idx_map[((0,0,0,0),102)], id)) # map[102]
-        batch_edges_idxs.append(np.array(edges_idxs))
-    return batch_edges_idxs
 
 def get_edges_idxs_new_angles_v2(bb_tok_pairs, theta, width_height_list, num_edges = 4):
     """
@@ -776,69 +693,6 @@ def get_edges_idxs_new_angles_v2(bb_tok_pairs, theta, width_height_list, num_edg
         batch_edges_idxs.append(np.array(edges_idxs))
     return batch_edges_idxs
 
-def make_edges_v2(bb_tok_pairs, types = ['vd','vu','hr','hl'], num_edges = 4):
-    # bb_cent_map = get_centroid_map(bboxes)
-    bb_edge_maps, edge_maps = [], []
-    for bb_tok_pair in bb_tok_pairs:
-        bb_edge_map = {t:{} for t in types}
-        edge_map = defaultdict(list)
-        for i, b_t1 in enumerate(bb_tok_pair):
-            curr_dists, uniq_edges = [], []
-            bb1, tok1 = b_t1[0], b_t1[1]
-            for type in types:
-                bb_edge_map[type][(bb1, tok1)] = []
-                # min_dist = 100000
-                if tok1==0 or tok1==101 or tok1==102:
-                    continue
-                for j, b_t2 in enumerate(bb_tok_pair):
-                    bb2, tok2 = b_t2[0], b_t2[1]
-                    if i!=j:
-                        if tok2==0 or tok2==101 or tok2==102:
-                            continue
-                        if not valid_dist(bb1, bb2, type):
-                            continue
-                        dist = euclid_dist(bb1, bb2)
-                        curr_dists.append([(bb2, tok2), dist])
-                        # if dist < min_dist:
-                        #     min_dist = dist
-                        #     bb_edge_map[type][(bb1, tok1)] = (bb2, tok2)
-            curr_dists.sort(key = lambda x:x[1])
-            for curr in curr_dists:
-                if curr[0][0] not in uniq_edges:
-                    uniq_edges.append(curr[0][0])
-                if len(uniq_edges) > num_edges:
-                    break
-                # if curr[0][0] in uniq_edges:
-                #     continue
-                edge_map[(bb1, tok1)].append(curr[0])
-                # bb_edge_map[type][(bb1, tok1)].append(curr[0])
-        # bb_edge_maps.append(bb_edge_map)
-        edge_maps.append(edge_map)
-    return edge_maps
-
-def get_edges_idxs_v2(bb_tok_pairs, types = ['vd','vu','hr','hl'] ):
-    edge_maps = make_edges_v2(bb_tok_pairs)
-    idx_pair_maps, pair_idx_maps = get_idx_pair_maps(bb_tok_pairs)
-    batch_edges_idxs = []
-    for edge_map, pair_idx_map in zip(edge_maps, pair_idx_maps):
-        edges_idxs = []
-        for x,y in edge_map.items():
-            for k in y:
-                # if tuple(sorted([pair_idx_map[x], pair_idx_map[k]])) not in edges_idxs:
-                #     edges_idxs.append(tuple(sorted([pair_idx_map[x], pair_idx_map[k]])))
-                if tuple([pair_idx_map[x], pair_idx_map[k]]) not in edges_idxs or tuple([pair_idx_map[k], pair_idx_map[x]]) not in edges_idxs:
-                    # edges_idxs.append(sorted(tuple([pair_idx_map[x], pair_idx_map[k]])))
-                    edges_idxs.append(tuple([pair_idx_map[x], pair_idx_map[k]]))
-                    # edges_idxs.append(tuple([pair_idx_map[k], pair_idx_map[x]]))
-        for pair, id in pair_idx_map.items():
-            _, tok = pair[0], pair[1]
-            if tok==101 or tok==102 or tok==0:
-                continue
-            edges_idxs.append((pair_idx_map[((0,0,0,0),101)], id)) # map[101]
-            edges_idxs.append((pair_idx_map[((0,0,0,0),102)], id)) # map[102]
-        batch_edges_idxs.append(np.array(edges_idxs))
-    return batch_edges_idxs
-
 def make_edges_new(bb_tok_pairs, num_edges = 4, plot_flag = False):
     """
     Create edges based on bounding box-token pairs.
@@ -852,7 +706,7 @@ def make_edges_new(bb_tok_pairs, num_edges = 4, plot_flag = False):
         list: A list of dictionaries containing edge mappings for each sample in the dataset.
         Each dictionary maps a bounding box-token pair to a list of connected bounding box-token pairs.
     """
-    # bb_cent_map = get_centroid_map(bboxes)
+   
     edge_maps, edges_pts_coords_info_maps = [], []
     for bb_tok_pair in bb_tok_pairs:
         edge_map, edges_pts_coords_info_map = defaultdict(list), defaultdict(list) 
@@ -887,7 +741,7 @@ def make_edges_new(bb_tok_pairs, num_edges = 4, plot_flag = False):
     return edge_maps
 
 def make_edges_new_angles(bb_tok_pairs, theta1, theta2, width_height_list, num_edges = 1,  types = ['vd','vu','hr','hl'], plot_flag = False):
-    # bb_cent_map = get_centroid_map(bboxes)
+
     edge_maps, edges_pts_coords_info_maps = [], []
     for k, bb_tok_pair_norm in enumerate(bb_tok_pairs):
         bb_tok_pair = [(tuple(unnormalize_box(bb, width_height_list[k][0], width_height_list[k][1])), tok) for bb, tok in bb_tok_pair_norm]
@@ -926,87 +780,6 @@ def make_edges_new_angles(bb_tok_pairs, theta1, theta2, width_height_list, num_e
         return edge_maps, edges_pts_coords_info_maps
     return edge_maps
 
-def get_edges_idxs_from_label(bb_label_pairs, types = ['vd','vu','hr','hl'] ):
-    edge_maps = make_edges_from_label(bb_label_pairs)
-    idx_pair_maps, pair_idx_maps = get_idx_pair_maps(bb_label_pairs)
-    batch_edges_idxs = []
-    for edge_map, pair_idx_map in zip(edge_maps, pair_idx_maps):
-        edges_idxs = []
-        for x, y in edge_map.items():
-            for k in y:
-                if tuple([pair_idx_map[x], pair_idx_map[k]]) not in edges_idxs and tuple([pair_idx_map[k], pair_idx_map[x]]) not in edges_idxs:
-                    edges_idxs.append(tuple([pair_idx_map[x], pair_idx_map[k]]))
-        # for pair, id in pair_idx_map.items():
-        #     _, tok = pair[0], pair[1]
-        #     if tok==101 or tok==102 or tok==0:
-        #         continue
-        #     edges_idxs.append((pair_idx_map[((0,0,0,0),101)], id)) # map[101]
-        #     edges_idxs.append((pair_idx_map[((0,0,0,0),102)], id)) # map[102]
-        batch_edges_idxs.append(np.array(edges_idxs))
-    return batch_edges_idxs
-
-def pickle_gat_stuff_from_label(dataset):
-    labels = dataset['labels']
-    bboxes = dataset['bbox']
-    bboxes = [[tuple(x) for x in bb]for bb in bboxes]
-    bb_label_pairs = [[(bb, lab) for bb, lab in zip(bbox, label)] for bbox, label in zip(bboxes, labels)]
-    edges_idxs = get_edges_idxs_from_label(bb_label_pairs)
-    # if type=='test':
-    #     pickle.dump(bb_tok_pairs, open(os.path.join(pickle_path,'bb_tok_pairs_{}.pkl'.format(type)),'wb'))
-    #     pickle.dump(edges_idxs, open(os.path.join(pickle_path, 'edges_idxs_{}.pkl'.format(type)),'wb'))
-    return edges_idxs
-
-def pickle_gat_stuff(dataset, pickle_path, type, num_edges = 1):
-    input_ids = dataset['input_ids']
-    bboxes = dataset['bbox']
-    bboxes = [[tuple(x) for x in bb]for bb in bboxes]
-    bb_tok_pairs = [[(bb, tok) for bb, tok in zip(bbox, in_id)] for bbox, in_id in zip(bboxes, input_ids)]
-    edges_idxs = get_edges_idxs_v3(bb_tok_pairs)
-    # if type=='test':
-    #     pickle.dump(bb_tok_pairs, open(os.path.join(pickle_path,'bb_tok_pairs_{}.pkl'.format(type)),'wb'))
-    #     pickle.dump(edges_idxs, open(os.path.join(pickle_path, 'edges_idxs_{}.pkl'.format(type)),'wb'))
-    return edges_idxs
-
-def get_adjs(dataset, pickle_path, type, num_edges = 1, feats_shape = 512):
-    if type=='test':
-        pickle_path = '/'.join(pickle_path.split('/')[:-1])
-    # if not os.path.exists(os.path.join(pickle_path,'bb_tok_pairs_{}.pkl'.format(type))) and not os.path.exists(os.path.join(pickle_path,'edges_idxs_{}.pkl'.format(type))):
-    if True:
-        edges_idxs = pickle_gat_stuff(dataset, pickle_path, type, num_edges)
-    else:
-        edges_idxs = pickle.load(open(os.path.join(pickle_path, 'edges_idxs_{}.pkl'.format(type)),'rb'))
-    adjs = []
-    for edges in edges_idxs:
-        adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])), shape=(feats_shape,feats_shape), dtype=np.float32)
-        adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
-        adj = normalize_adj(adj + sp.eye(adj.shape[0]))
-        # adj = adj + sp.eye(adj.shape[0])
-        
-        # adj = torch.FloatTensor(np.array(adj.todense()))
-        adj = np.array(adj.todense())
-        adjs.append(adj)
-    return adjs
-     
-def get_adjs_from_labels(dataset, pickle_path, type, feats_shape = 512):
-    if type=='test':
-        # edges_idxs = pickle_gat_stuff(dataset, pickle_path, type)
-        edges_idxs = pickle_gat_stuff_from_label(dataset)
-    else:
-        edges_idxs = pickle_gat_stuff_from_label(dataset)
-        # pickle_path = '/'.join(pickle_path.split('/')[:-1])
-
-    adjs = []
-    for edges in edges_idxs:
-        adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])), shape=(feats_shape,feats_shape), dtype=np.float32)
-        adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
-        adj = normalize_adj(adj + sp.eye(adj.shape[0]))
-        # adj = adj + sp.eye(adj.shape[0])
-        
-        # adj = torch.FloatTensor(np.array(adj.todense()))
-        adj = np.array(adj.todense())
-        adjs.append(adj)
-    return adjs
-
 def get_adjs_new(dataset, num_edges = 4, feats_shape = 512):
     """
     Get adjacency matrices based on the closest edge using line segments of the bounding boxes.
@@ -1034,32 +807,6 @@ def get_adjs_new(dataset, num_edges = 4, feats_shape = 512):
         
         # adj = torch.FloatTensor(np.array(adj.todense()))
         adj = np.array(adj.todense())
-        adjs.append(adj)
-    return adjs
-
-def get_adjs_new_angles(dataset, pickle_path, type, theta1 = 0, theta2 = 30, width_height_list =[], feats_shape = 512):
-    '''Finding closest edges based on a region which is between theta1 and theta2 from the centroid of a bounding box'''
-    if type=='test':
-        pickle_path = '/'.join(pickle_path.split('/')[:-1])
-    # if not os.path.exists(os.path.join(pickle_path,'bb_tok_pairs_{}.pkl'.format(type))) and not os.path.exists(os.path.join(pickle_path,'edges_idxs_{}.pkl'.format(type))):
-    
-    input_ids = dataset['input_ids']
-    bboxes = dataset['bbox']
-    bboxes = [[tuple(x) for x in bb]for bb in bboxes]
-    bb_tok_pairs = [[(bb, tok) for bb, tok in zip(bbox, in_id)] for bbox, in_id in zip(bboxes, input_ids)]
-    edges_idxs = get_edges_idxs_new_angles(bb_tok_pairs, theta1, theta2, width_height_list)
-    adjs = []
-    for edges in edges_idxs:
-        try:
-            adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])), shape=(feats_shape,feats_shape), dtype=np.float32)
-            adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
-            adj = normalize_adj(adj + sp.eye(adj.shape[0]))
-            # adj = adj + sp.eye(adj.shape[0])
-            
-            # adj = torch.FloatTensor(np.array(adj.todense()))
-            adj = np.array(adj.todense())
-        except:
-            adj = np.identity(512)
         adjs.append(adj)
     return adjs
 
@@ -1097,49 +844,6 @@ def get_adjs_new_angles_v2(dataset, theta, width_height_list, num_edges = 4, fea
             adj = np.identity(512)
         adjs.append(adj)
     return adjs
- 
-def encode_onehot(labels):
-    # The classes must be sorted before encoding to enable static class encoding.
-    # In other words, make sure the first class always maps to index 0.
-    classes = sorted(list(set(labels)))
-    classes_dict = {c: np.identity(len(classes))[i, :] for i, c in enumerate(classes)}
-    labels_onehot = np.array(list(map(classes_dict.get, labels)), dtype=np.int32)
-    return labels_onehot
-
-def load_data(path="./data/cora/", dataset="cora"):
-    """Load citation network dataset (cora only for now)"""
-    print('Loading {} dataset...'.format(dataset))
-
-    idx_features_labels = np.genfromtxt("{}{}.content".format(path, dataset), dtype=np.dtype(str))
-    features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
-    labels = encode_onehot(idx_features_labels[:, -1])
-
-    # build graph
-    idx = np.array(idx_features_labels[:, 0], dtype=np.int32)
-    idx_map = {j: i for i, j in enumerate(idx)}
-    edges_unordered = np.genfromtxt("{}{}.cites".format(path, dataset), dtype=np.int32)
-    edges = np.array(list(map(idx_map.get, edges_unordered.flatten())), dtype=np.int32).reshape(edges_unordered.shape)
-    adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])), shape=(labels.shape[0], labels.shape[0]), dtype=np.float32)
-
-    # build symmetric adjacency matrix
-    adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
-
-    features = normalize_features(features)
-    adj = normalize_adj(adj + sp.eye(adj.shape[0]))
-
-    idx_train = range(140)
-    idx_val = range(200, 500)
-    idx_test = range(500, 1500)
-
-    adj = torch.FloatTensor(np.array(adj.todense()))
-    features = torch.FloatTensor(np.array(features.todense()))
-    labels = torch.LongTensor(np.where(labels)[1])
-
-    idx_train = torch.LongTensor(idx_train)
-    idx_val = torch.LongTensor(idx_val)
-    idx_test = torch.LongTensor(idx_test)
-
-    return adj, features, labels, idx_train, idx_val, idx_test
 
 def normalize_adj(mx):
     """

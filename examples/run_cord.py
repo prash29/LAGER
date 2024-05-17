@@ -435,19 +435,11 @@ def main():
         #     tokenized_inputs["images"] = images
 
         all_adjs = []
-        theta = 60
-        adj_save_path = 'data/pickled_adjs'
-
-        '''Sending multiple adjacency matrices for different theta ranges v1'''
-
-        # theta_pairs = [(x*theta, x*theta + theta) for x in range(360//theta)]
-        # for theta1, theta2 in theta_pairs:
-        #     adjs = np.array(get_adjs_new_angles(tokenized_inputs, pickle_path, type, theta1, theta2, width_height_list))
-        #     # tokenized_inputs[f"adjs_k"] = adjs
-        #     all_adjs.append(adjs)
+        theta = config.theta
+        adj_save_path = config.adj_save_path
 
         if heuristic == 'angles':
-            '''Sending multiple adjacency matrices for different theta ranges v2'''
+            '''K-nearest neighbors at multiple angles heuristic'''
             try:
                 all_adjs = pickle.load(open(os.path.join(adj_save_path,f'cord_{type1}_adjs_{theta}_angles_v2_full.pkl'),'rb'))
                 tokenized_inputs["adjs"] = all_adjs
@@ -467,7 +459,7 @@ def main():
                 tokenized_inputs["adjs"] = all_adjs
                 return tokenized_inputs
         elif heuristic == 'nearest':
-            '''Closest edge - new (Single Graph)'''
+            '''K-nearest neighbors in space heuristic'''
             try:
                 adjs = pickle.load(open(os.path.join(adj_save_path,f'cord_{type1}_adjs_closest_new_full.pkl'),'rb'))
                 tokenized_inputs["adjs"] = adjs

@@ -1026,11 +1026,12 @@ class LayoutLMv3ForTokenClassification(LayoutLMv3PreTrainedModel):
 
         self.layoutlmv3 = LayoutLMv3Model(config)
         self.heuristic = config.heuristic
+        # Define GAT if heuristic is 'nearest' or 'angles' else use baseline
         if self.heuristic =='nearest' or self.heuristic == 'angles':
             self.GAT = GAT(config.nfeat_gat, config.nhid_gat, config.nclass_gat, config.dropout_gat, config.alpha_gat, config.nheads_gat)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        # self.classifier = nn.Linear(config.nhid_gat*config.nheads_gat, config.num_labels)
-        # self.classifier = nn.Linear(config.hidden_size, config.num_labels)
+
+        # ClassificationHead decided based on number of labels (CORD or FUNSD)
         if config.num_labels < 10:
             if self.heuristic == 'nearest' or self.heuristic == 'angles':
                 self.classifier = nn.Linear(config.nhid_gat*config.nheads_gat, config.num_labels)
@@ -1085,8 +1086,9 @@ class LayoutLMv3ForTokenClassification(LayoutLMv3PreTrainedModel):
         adjs_feat_shape = 512
 
         if self.heuristic == 'nearest':
-
-            '''Closest edge - new (Single graph)'''
+            '''K-nearest neighbors in space heuristic (Single Graph and GAT)
+            Use the enhanced output from the GAT to perform classification
+            '''
             gat_output = sequence_output[:, :adjs_feat_shape, :]
             gat_output = self.GAT(gat_output, adjs, attention_mask[:,:adjs_feat_shape])
             gat_output = self.dropout(gat_output)
@@ -1094,8 +1096,9 @@ class LayoutLMv3ForTokenClassification(LayoutLMv3PreTrainedModel):
             logits = self.classifier(gat_output)
         
         elif self.heuristic == 'angles':
-
-            ''' Multiple adjs based on angle and averaging the GAT outputs from each of those graphs '''
+            '''K-nearest neighbors at multiple angles heuristic (Multiple graphs and GATs)
+            Average the GAT outputs from each of the graphs and then perform classification
+            '''
             adjs = torch.transpose(adjs, 1,0)
             gat_outputs = []
             for adj in adjs:
