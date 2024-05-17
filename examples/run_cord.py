@@ -200,7 +200,8 @@ def main():
 
     # Setup logging
     timestamp = int(datetime.timestamp(datetime.now()))
-    if not os.dir.exists('logs'):
+    # check if "logs" directory exists, if it doesn't create a directory called "logs"
+    if not os.path.exists('logs'):
         os.makedirs('logs')
     
     logging.basicConfig(
@@ -448,7 +449,7 @@ def main():
                     width_height_list = width_height_eval
                 else:
                     width_height_list = width_height_test
-                    
+
                 theta_values = [x*theta for x in range(1,360//theta + 1)]
                 for theta1 in theta_values:
                     adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, theta1, width_height_list, num_edges))

@@ -220,7 +220,7 @@ def main():
     timestamp = int(datetime.timestamp(datetime.now()))
     
     ### Logs are saved based on the timestamp of the run
-    if not os.dir.exists('logs'):
+    if not os.path.exists('logs'):
         os.makedirs('logs')
     logging.basicConfig(
         filename=f'logs/test-lmv3-gat-{sz}-{sd}-{heuristic}-{timestamp}.log',
