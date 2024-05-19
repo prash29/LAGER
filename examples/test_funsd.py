@@ -188,7 +188,7 @@ def main():
     else:
         model_args, data_args, training_args, rem_args = parser.parse_args_into_dataclasses(return_remaining_strings=True)
         path_config = json.load(open(rem_args[-1],'r'))
-        test_dir_name = rem_args[0].split('_')[-1]
+        test_dir_name = rem_args[0].split('-')[-1]
         results_path = path_config["results_path"]
         # dir1_split = dir1.split('-')
         sz, sd = rem_args[1].split('-')[-1], rem_args[2].split('-')[-1]

@@ -173,7 +173,7 @@ def main():
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args, rem_args = parser.parse_args_into_dataclasses(return_remaining_strings=True)
-        dir1 = rem_args[0].split('_')[-1]
+        dir1 = rem_args[0].split('-')[-1]
         results_path = '/home/prashant/unilm/layoutlmv3/results'
         # dir1_split = dir1.split('-')
         sz, sd = rem_args[1].split('-')[-1], rem_args[2].split('-')[-1]
