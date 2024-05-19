@@ -1,4 +1,4 @@
 {"few_shot_info":"data/cord_few_shot_info.json",
-"image_to_id_dict":"data/image_to_id_train_cord.json", "image_to_id_train":"data/id_to_image_train_cord.json",
-"image_to_id_eval":"data/id_to_image_eval_cord.json","image_to_id_test":"data/image_to_id_test_cord.json",
+"image_to_id_dict":"data/image_to_id_train_cord.json", "id_to_image_train":"data/id_to_image_train_cord.json",
+"id_to_image_eval":"data/id_to_image_eval_cord.json","id_to_image_test":"data/image_to_id_test_cord.json",
  "results_path":"results", "dataset_path":"data/DocDatasets/CORD/raw"}

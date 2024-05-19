@@ -195,7 +195,6 @@ def main():
         heuristic = rem_args[3].split('-')[-1]
         # sz, sd = dir1_split[-2], dir1_split[-1]
         test_dir =os.path.join(results_path, test_dir_name)
-        pickle_path = ''
         try:
             mod_type = rem_args[4].split('-')[-1]
             if mod_type=='rotate':
@@ -238,7 +237,7 @@ def main():
     timestamp = int(datetime.timestamp(datetime.now()))
     
     logging.basicConfig(
-        filename='logs/test-lmv3-gat-closest_{}.log'.format(timestamp),
+        filename='logs/test-lmv3-gat-funsd-{}.log'.format(timestamp),
         filemode='a',
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -444,7 +443,7 @@ def main():
             except:
                 theta_values = [x*theta for x in range(1,360//theta + 1)]
                 for theta1 in theta_values:
-                    adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, pickle_path, type1, theta1, width_height_list))
+                    adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, theta1, width_height_list))
                     all_adjs.append(adjs)
                 
                 all_adjs = np.array(all_adjs)
@@ -465,7 +464,7 @@ def main():
                 tokenized_inputs["adjs"] = adjs
                 return tokenized_inputs
             except:
-                adjs = np.array(get_adjs_new(tokenized_inputs, pickle_path, type1))
+                adjs = np.array(get_adjs_new(tokenized_inputs))
                 if type1=='test':
                     if not os.path.exists(adj_save_path):
                             os.makedirs(adj_save_path)

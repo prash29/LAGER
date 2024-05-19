@@ -347,11 +347,11 @@ def main():
     # Get width height of images
     ids_to_train = [int(image_to_id_dict[x]) for x in few_shot_info[sz][sd]]
 
-    id_to_image_train_json = json.load(open(path_config['image_to_id_train']))
+    id_to_image_train_json = json.load(open(path_config['id_to_image_train']))
     # id_to_image_train_json = {j:i for i, j in image_to_id_train_json.items()}
-    id_to_image_eval_json = json.load(open(path_config['image_to_id_eval']))
+    id_to_image_eval_json = json.load(open(path_config['id_to_image_eval']))
     # id_to_image_test_json = {j:i for i, j in image_to_id_test_json.items()}
-    id_to_image_test_json = json.load(open(path_config['image_to_id_test']))
+    id_to_image_test_json = json.load(open(path_config['id_to_image_test']))
 
     if heuristic == 'angles':
         width_height_train, width_height_eval, width_height_test = get_widths_heights_cord(id_to_image_train_json, id_to_image_eval_json, id_to_image_test_json)

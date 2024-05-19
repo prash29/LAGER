@@ -173,40 +173,33 @@ def main():
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args, rem_args = parser.parse_args_into_dataclasses(return_remaining_strings=True)
-        dir1 = rem_args[0].split('-')[-1]
-        results_path = '/home/prashant/unilm/layoutlmv3/results'
-        # dir1_split = dir1.split('-')
+        path_config = json.load(open(rem_args[-1],'r'))
+        test_dir_name = rem_args[0].split('-')[-1]
+        results_path = path_config["results_path"]
         sz, sd = rem_args[1].split('-')[-1], rem_args[2].split('-')[-1]
+        heuristic = rem_args[3].split('-')[-1]
         # sz, sd = dir1_split[-2], dir1_split[-1]
-        test_dir =os.path.join(results_path, dir1)
-        pickle_path = ''
+        test_dir =os.path.join(results_path, test_dir_name)
         try:
-            rotation_flag = False
-            scale_flag = False
-            shift_flag = False
-            mod_type = rem_args[3].split('-')[-2]
+            mod_type = rem_args[4].split('-')[-1]
             if mod_type=='rotate':
                 rotation_flag = True
-                rotation_angle = int(rem_args[3].split('-')[-1])
+                rotation_angle = int(rem_args[5].split('-')[-1])
             elif mod_type=='scale':
                 scale_flag = True
-                scale_factor = int(rem_args[3].split('-')[-1])
+                scale_factor = int(rem_args[5].split('-')[-1])
             elif mod_type=='shift':
                 shift_flag = True
-                shift = int(rem_args[3].split('-')[-1])
-            # rotation_angle = int(rem_args[3].split('-')[-1])
-            # rotation_flag = False
-            # scale_flag = True
-            # scale_factor = 2
-            # shift_flag = False
-            # shift = 20
+                shift = int(rem_args[5].split('-')[-1])
+
         except:
-            rotation_angle = 3
+            rotation_angle = 8
             rotation_flag = False
             scale_flag = False
-            scale_factor = 2
-            shift_flag = True
-            shift = 20
+            scale_factor = 4
+            shift_flag = False
+            shift = 10
+
         training_args.logging_steps = 100
         # training_args.per_device_eval_batch_size = 1
     
@@ -229,7 +222,7 @@ def main():
     timestamp = int(datetime.timestamp(datetime.now()))
     
     logging.basicConfig(
-        filename='logs/test-lmv3-cord_{}.log'.format(timestamp),
+        filename='logs/test-lmv3-gat-cord_{}.log'.format(timestamp),
         filemode='a',
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -254,8 +247,8 @@ def main():
     # Set seed before initializing model.
     set_seed(training_args.seed)
     datasets = load_dataset(os.path.abspath(layoutlmft.data.cord.__file__), cache_dir=model_args.cache_dir)
-    few_shot_info = json.loads(open('/home/prashant/unilm/layoutlmv3/data/cord_few_shot_info.json','r').read())
-    image_to_id_dict = json.loads(open('/home/prashant/unilm/layoutlmv3/data/image_to_id_train_cord.json','r').read())
+    few_shot_info = json.loads(open(path_config['few_shot_info'],'r').read())
+    image_to_id_dict = json.loads(open(path_config['image_to_id_dict'],'r').read())
 
     if training_args.do_train:
         column_names = datasets["train"].column_names
@@ -316,11 +309,11 @@ def main():
     # Get width height of images
     ids_to_train = [int(image_to_id_dict[x]) for x in few_shot_info[sz][sd]]
 
-    id_to_image_train_json = json.load(open('data/id_to_image_train_cord.json'))
+    id_to_image_train_json = json.load(path_config['id_to_image_train'])
     # id_to_image_train_json = {j:i for i, j in image_to_id_train_json.items()}
-    id_to_image_eval_json = json.load(open('data/id_to_image_eval_cord.json'))
+    id_to_image_eval_json = json.load(path_config['id_to_image_eval'])
     # id_to_image_test_json = {j:i for i, j in image_to_id_test_json.items()}
-    id_to_image_test_json = json.load(open('data/id_to_image_test_cord.json'))
+    id_to_image_test_json = json.load(path_config['id_to_image_test'])
 
     width_height_train, width_height_eval, width_height_test = get_widths_heights_cord(id_to_image_train_json, id_to_image_eval_json, id_to_image_test_json)
     width_height_train = [width_height_train[i] for i in ids_to_train]
@@ -345,6 +338,8 @@ def main():
                 mean=torch.tensor(mean),
                 std=torch.tensor(std))
         ])
+    
+    gat_config_params = json.load(open("data/gat_params.json",'r'))
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples, type1, augmentation=False):
@@ -425,46 +420,49 @@ def main():
             tokenized_inputs["bbox"] = get_shifted_bboxes(bboxes, shift, width_height_list)
 
         all_adjs = []
-        theta = 60
-        adj_save_path = 'data/pickled_adjs'
-        '''Sending multiple adjacency matrices for different theta ranges v1'''
+        theta = gat_config_params['theta']
+        adj_save_path = gat_config_params['adj_save_path']
 
-        # theta_pairs = [(x*theta, x*theta + theta) for x in range(360//theta)]
-        # for theta1, theta2 in theta_pairs:
-        #     adjs = np.array(get_adjs_new_angles(tokenized_inputs, pickle_path, type, theta1, theta2, width_height_list))
-        #     # tokenized_inputs[f"adjs_k"] = adjs
-        #     all_adjs.append(adjs)
-        '''Sending multiple adjacency matrices for different theta ranges v2'''
-        # try:
-        #     all_adjs = pickle.load(open(os.path.join(adj_save_path,f'cord_{type1}_adjs_{theta}_angles_v2_scale_{scale_factor}_v2.pkl'),'rb'))
-        #     tokenized_inputs["adjs"] = all_adjs
-        #     return tokenized_inputs
-        # except:
-        #     theta_values = [x*theta for x in range(1,360//theta + 1)]
-        #     for theta1 in theta_values:
-        #         adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, pickle_path, type1, theta1, width_height_list))
-        #         all_adjs.append(adjs)
-            
-        #     all_adjs = np.array(all_adjs)
-        #     all_adjs = np.transpose(all_adjs, (1,0,2,3))
-            
-        #     if type1=='eval' or type1=='test':
-        #         pickle.dump(all_adjs, open(os.path.join(adj_save_path,f'cord_{type1}_adjs_{theta}_angles_v2_scale_{scale_factor}_v2.pkl'),'wb'))
-            
-        #     tokenized_inputs["adjs"] = all_adjs
-        #     return tokenized_inputs
-        '''Closest edge - new (Single Graph)'''
-        try:
-            adjs = pickle.load(open(os.path.join(adj_save_path,f'cord_{type1}_adjs_closest_new_v2_scale_{scale_factor}_v2.pkl'),'rb'))
-            tokenized_inputs["adjs"] = adjs
+        if heuristic == 'angles':
+            '''K-nearest neighbors at multiple angles heuristic'''
+            ## Try-except block to load pickled adjacency matrix for the test set
+            try:
+                all_adjs = pickle.load(open(os.path.join(adj_save_path,f'cord_{type1}_adjs_{theta}_angles_v2_new_full.pkl'),'rb'))
+                tokenized_inputs["adjs"] = all_adjs
+                return tokenized_inputs
+            except:
+                theta_values = [x*theta for x in range(1,360//theta + 1)]
+                for theta1 in theta_values:
+                    adjs = np.array(get_adjs_new_angles_v2(tokenized_inputs, theta1, width_height_list))
+                    all_adjs.append(adjs)
+                
+                all_adjs = np.array(all_adjs)
+                all_adjs = np.transpose(all_adjs, (1,0,2,3))
+                
+                if type1=='test':
+                    if not os.path.exists(adj_save_path):
+                            os.makedirs(adj_save_path)
+                    pickle.dump(all_adjs, open(os.path.join(adj_save_path,f'cord_{type1}_adjs_{theta}_angles_v2_new_full.pkl'),'wb'))
+                
+                tokenized_inputs["adjs"] = all_adjs
+                return tokenized_inputs
+        elif heuristic == 'nearest':
+            '''K-nearest neighbors in space heuristic'''
+            ## Try-except block to load pickled adjacency matrix for the test set
+            try:
+                adjs = pickle.load(open(os.path.join(adj_save_path,f'cord_{type1}_adjs_closest_new_full.pkl'),'rb'))
+                tokenized_inputs["adjs"] = adjs
+                return tokenized_inputs
+            except:
+                adjs = np.array(get_adjs_new(tokenized_inputs))
+                if type1=='test':
+                    if not os.path.exists(adj_save_path):
+                            os.makedirs(adj_save_path)
+                    pickle.dump(adjs, open(os.path.join(adj_save_path,f'funsd_{type1}_adjs_closest_new_full.pkl'),'wb'))
+                tokenized_inputs["adjs"] = adjs
+                return tokenized_inputs
+        else:
             return tokenized_inputs
-        except:
-            adjs = np.array(get_adjs_new(tokenized_inputs, pickle_path, type1))
-            if type1=='eval' or type1=='test':
-                pickle.dump(adjs, open(os.path.join(adj_save_path,f'cord_{type1}_adjs_closest_new_v2_scale_{scale_factor}_v2.pkl'),'wb'))
-            tokenized_inputs["adjs"] = adjs
-            return tokenized_inputs
-        return tokenized_inputs
 
     if training_args.do_train:
         if "train" not in datasets:
