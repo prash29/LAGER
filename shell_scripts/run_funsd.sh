@@ -1,9 +1,10 @@
 # conda activate layoutlmv3
 path=$(pwd)
 echo "Current working directory : $path"
-heuristic='nearest'
-deg=4
-hd=4
+heuristic='nearest' # Heuristics available: nearest, angles, baseline
+deg=4 # Degree of the graph
+hd=4 # Number of attention heads in the GAT
+# Run a loop for different few-shot sizes and seeds
 for sz in 4
 do
  for sd in 0
@@ -11,7 +12,7 @@ do
     cd $path
     echo "===== FUNSD LAGER Heuristic=$heuristic Few-Shot Size: $sz Seed: $sd"
 #   --master_port 4398
-   CUDA_VISIBLE_DEVICES=3 python examples/run_funsd.py  \
+   CUDA_VISIBLE_DEVICES=0 python examples/run_funsd.py  \
     --do_train --do_eval --do_predict --metric_for_best_model f1 --model_name_or_path microsoft/layoutlmv3-base  \
    --output_dir results/test-layoutlmv3-gat-$heuristic-$sz-$sd --segment_level_layout 1 --visual_embed 1 --input_size 224 \
    --max_steps 2000 --learning_rate 1e-5  \

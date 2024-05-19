@@ -399,9 +399,7 @@ def main():
                 mean=torch.tensor(mean),
                 std=torch.tensor(std))
         ])
-
-
-
+                        
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples, type1, augmentation=False):
@@ -413,7 +411,7 @@ def main():
             # We use this argument because the texts in our dataset are lists of words (with a label for each word).
             is_split_into_words=True,
         )
-        
+
         labels = []
         bboxes = []
         images = []

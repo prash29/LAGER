@@ -1,15 +1,16 @@
-# conda activate layoutlmft
+# conda activate layoutlmv3
 path=$(pwd)
 echo "Current working directory : $path"
-heuristic='nearest'
-deg=4
-hd=4
+heuristic='nearest' # Heuristics available: nearest, angles, baseline
+deg=4 # Degree of the graph
+hd=4 # Number of attention heads in the GAT
+# Run a loop for different few-shot sizes and seeds
 for sz in 4
 do
  for sd in 0
   do
     cd $path
-    echo "===== FUNSD LAGER Heuristic=$heuristic Few-Shot Size: $sz Seed: $sd"
+    echo "===== CORD LAGER Heuristic=$heuristic Few-Shot Size: $sz Seed: $sd"
 
 
    CUDA_VISIBLE_DEVICES=0 python examples/run_cord.py  \

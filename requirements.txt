@@ -1,4 +1,8 @@
-datasets==1.15.1
+datasets==2.3.2
+evaluate==0.1.2
+huggingface-hub==0.8.1
+response==0.5.0
+tokenizers==0.10.1
 transformers==4.12.5
 seqeval==1.2.2
 deepspeed==0.5.7
@@ -10,3 +14,4 @@ Pillow
 einops
 textdistance
 shapely
+gdown
